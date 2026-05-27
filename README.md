@@ -1,4 +1,4 @@
-# K-Map and Tabulation Solver
+# K-Map made Easy
 
 A browser-based Boolean simplification tool built with React, TypeScript, Vite, Tailwind CSS, and shadcn-style UI components.
 
@@ -777,13 +777,4 @@ Not supported:
 - physical hardware output
 - C or assembly helper integration
 
-## Notes for Future Work
 
-Useful improvements:
-
-- add unit tests for `solver.ts`
-- add Boolean expression parsing
-- add Verilog testbench generation
-- add export/copy buttons for generated Verilog
-- add visual K-map loop outlines instead of group tags
-- add optional C/WASM or native CLI solver backend
