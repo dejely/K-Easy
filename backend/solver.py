@@ -115,7 +115,7 @@ def generate_verilog_module(
     variable_names: list[str],
     outputs: list[dict],
 ) -> str:
-    ports = [*variable_names, *[output["name"] for output in outputs]]
+    ports = [*variable_names, *[output["name"] for output in outputs]] # add all output names found in var names
     declarations = [
         f"module {module_name}({', '.join(ports)});",
         f"  input {', '.join(variable_names)};",
@@ -136,7 +136,7 @@ def format_pattern_for_display(
     variable_names: list[str],
     mode: str,
 ) -> str:
-    if all(bit == "-" for bit in pattern):
+    if all(bit == "-" for bit in pattern): # if all are - then that means both returns are true
         return "1" if mode == "sop" else "0"
 
     parts: list[str] = []

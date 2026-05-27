@@ -105,6 +105,7 @@ export interface VerilogModuleResponse {
 }
 
 const DEFAULT_VARIABLE_NAMES = ['A', 'B', 'C', 'D']
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 /** Returns the conventional variable names for the requested variable count. */
 export const getDefaultVariableNames = (count: VariableCount) =>
@@ -175,7 +176,7 @@ async function postJson<TResponse>(
   body: unknown,
   signal?: AbortSignal,
 ): Promise<TResponse> {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
