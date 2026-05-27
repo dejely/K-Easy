@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from . import helpers
 
 DEFAULT_VARIABLE_NAMES = ["A", "B", "C", "D"]
 GRAY_BY_WIDTH = {
@@ -69,7 +70,7 @@ def solve_boolean_function(
     minterms: list[int],
     dont_cares: list[int],
 ) -> dict:
-    universe = get_universe(variable_count)
+    universe = helpers.get_universe(variable_count)
     minterm_set = set(minterms)
     dont_care_set = set(dont_cares)
     zeros = [
@@ -90,7 +91,7 @@ def solve_boolean_function(
         truth_table.append(
             {
                 "index": index,
-                "bits": to_bits(index, variable_count),
+                "bits": helpers.to_bits(index, variable_count),
                 "value": value,
             }
         )
@@ -154,7 +155,7 @@ def format_pattern_for_display(
 
 
 def implicant_covers_index(pattern: str, index: int) -> bool:
-    bits = to_bits(index, len(pattern))
+    bits = helpers.to_bits(index, len(pattern))
     return all(bit == "-" or bit == bits[bit_index] for bit_index, bit in enumerate(pattern))
 
 
@@ -165,8 +166,8 @@ def simplify_terms(
     target_terms: list[int],
     dont_cares: list[int],
 ) -> dict:
-    unique_targets = unique_sorted(target_terms)
-    unique_dont_cares = unique_sorted(dont_cares)
+    unique_targets = helpers.unique_sorted(target_terms)
+    unique_dont_cares = helpers.unique_sorted(dont_cares)
 
     if not unique_targets:
         constant = "0" if mode == "sop" else "1"
@@ -211,8 +212,8 @@ def collect_prime_implicants(
     target_terms: list[int],
     dont_cares: list[int],
 ) -> dict:
-    all_terms = unique_sorted([*target_terms, *dont_cares])
-    current = [{"pattern": to_bits(term, variable_count), "terms": [term]} for term in all_terms]
+    all_terms = helpers.unique_sorted([*target_terms, *dont_cares])
+    current = [{"pattern": helpers.to_bits(term, variable_count), "terms": [term]} for term in all_terms]
     rounds: list[dict] = []
     prime_map: dict[str, dict] = {}
     round_index = 0
@@ -241,11 +242,11 @@ def collect_prime_implicants(
                     used_patterns.add(left["pattern"])
                     used_patterns.add(right["pattern"])
 
-                    terms = unique_sorted([*left["terms"], *right["terms"]])
+                    terms = helpers.unique_sorted([*left["terms"], *right["terms"]])
                     existing = next_map.get(combined_pattern)
                     next_map[combined_pattern] = {
                         "pattern": combined_pattern,
-                        "terms": unique_sorted([*existing["terms"], *terms])
+                        "terms": helpers.unique_sorted([*existing["terms"], *terms])
                         if existing
                         else terms,
                     }
@@ -336,7 +337,7 @@ def select_prime_implicants(
         candidates.sort(
             key=lambda candidate: (
                 -len(candidate["newlyCovered"]),
-                literal_count(candidate["implicant"]["pattern"]),
+                helpers.literal_count(candidate["implicant"]["pattern"]),
                 candidate["implicant"]["pattern"],
             )
         )
@@ -400,7 +401,7 @@ def format_expression(
     if not implicants:
         return "0" if mode == "sop" else "1"
 
-    if any(is_all_dont_care(implicant["pattern"]) for implicant in implicants):
+    if any(helpers.is_all_dont_care(implicant["pattern"]) for implicant in implicants):
         return "1" if mode == "sop" else "0"
 
     terms = [
@@ -418,7 +419,7 @@ def format_verilog_expression(
     if not implicants:
         return "1'b0" if mode == "sop" else "1'b1"
 
-    if any(is_all_dont_care(implicant["pattern"]) for implicant in implicants):
+    if any(helpers.is_all_dont_care(implicant["pattern"]) for implicant in implicants):
         return "1'b1" if mode == "sop" else "1'b0"
 
     terms = [
@@ -455,7 +456,7 @@ def group_implicants(implicants: list[dict]) -> list[dict]:
     group_map: dict[int, list[dict]] = {}
 
     for implicant in implicants:
-        ones = count_ones(implicant["pattern"])
+        ones = helpers.count_ones(implicant["pattern"])
         group_map.setdefault(ones, []).append(implicant)
 
     return [
@@ -512,25 +513,4 @@ def sort_implicants(implicants: list[dict]) -> list[dict]:
     )
 
 
-def get_universe(variable_count: int) -> list[int]:
-    return list(range(2**variable_count))
 
-
-def unique_sorted(values: list[int]) -> list[int]:
-    return sorted(set(values))
-
-
-def to_bits(value: int, width: int) -> str:
-    return format(value, "b").zfill(width)
-
-
-def count_ones(pattern: str) -> int:
-    return len([bit for bit in pattern if bit == "1"])
-
-
-def literal_count(pattern: str) -> int:
-    return len([bit for bit in pattern if bit != "-"])
-
-
-def is_all_dont_care(pattern: str) -> bool:
-    return all(bit == "-" for bit in pattern)
